@@ -21,8 +21,8 @@
 #define SERVOSIGNAL PA8//PB10
 
 #define SUPPLYVOLTAGE 8.4
-#define VOLTAGELIMITDRIVER 6
-#define VOLTAGELIMITMOTOR 3
+#define VOLTAGELIMITDRIVER 6  
+#define VOLTAGELIMITMOTOR 3  //Verify this
 #define MOTORRESISTANCE 5.57
 
 #define SENSORMINPULSE 6
@@ -36,7 +36,7 @@
 #define USEMOTOR2 true
 
 #define MESSAGESIZE 8
-#define MAXTARGETVOLTAGE 6
+#define MAXTARGETVOLTAGE 15 // Verifz this
 
 void requestFun(void);
 void receiveFun (int bytes);
@@ -160,7 +160,7 @@ void initMotors() {
   motor1.torque_controller = TorqueControlType::voltage;
   motor1.controller = MotionControlType::torque;
   motor1.init();
-  motor1.initFOC();
+  motor1.initFOC(3.2, CW);
   }
 
   
@@ -177,7 +177,7 @@ void initMotors() {
   motor2.torque_controller = TorqueControlType::voltage;
   motor2.controller = MotionControlType::torque;
   motor2.init();
-  motor2.initFOC();
+  motor2.initFOC(4.8,CCW);
  }
 
 }
