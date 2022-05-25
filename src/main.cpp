@@ -18,7 +18,7 @@
 #define SDAPIN PB9
 #define SCLPIN PB8
 
-#define SERVOSIGNAL PB10
+#define SERVOSIGNAL PA8//PB10
 
 #define SUPPLYVOLTAGE 8.4
 #define VOLTAGELIMITDRIVER 6
@@ -31,13 +31,11 @@
 #define POLEPAIRS 11
 #define CLOSEDLOOP true
 
-#define USESERVO false
-#define USEMOTOR1 true 
+#define USESERVO true
+#define USEMOTOR1 true  
 #define USEMOTOR2 true
 
 #define MESSAGESIZE 8
-#define MAXTARGETVELOCITY 50
-#define MAXTARGETCURRENT 10
 #define MAXTARGETVOLTAGE 6
 
 void requestFun(void);
@@ -61,20 +59,19 @@ HardwareTimer *MyTim = new HardwareTimer(Instance);
 
 
 
-BLDCMotor motor1 = BLDCMotor(POLEPAIRS);//, MOTORRESISTANCE);
-BLDCDriver3PWM driver1 = BLDCDriver3PWM(PC0, PC1, PC2, PC13,PC13,PC13);
+BLDCMotor motor1 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);//, MOTORRESISTANCE);
+//BLDCDriver3PWM driver1 = BLDCDriver3PWM(PC0, PC1, PC2, PC13,PC13,PC13);
+BLDCDriver3PWM driver1 = BLDCDriver3PWM(PA0, PA1, PA2, PC14);
 MagneticSensorPWM sensor1 = MagneticSensorPWM(SENSORPWM1, SENSORMINPULSE, SENSORMAXPULSE);
 void doPWM1(){sensor1.handlePWM();}
 
-BLDCMotor motor2 = BLDCMotor(POLEPAIRS);//, MOTORRESISTANCE);
-BLDCDriver3PWM driver2 = BLDCDriver3PWM(PC6, PC7, PC8, PC15,PC15,PC15);
-//BLDCDriver3PWM driver2 = BLDCDriver3PWM(PA0, PA1, PA2, PC14,PC14,PC14);
+BLDCMotor motor2 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);//, MOTORRESISTANCE);
+BLDCDriver3PWM driver2 = BLDCDriver3PWM(PC6, PC7, PC8, PC15);
+
 MagneticSensorPWM sensor2 = MagneticSensorPWM(SENSORPWM2, SENSORMINPULSE, SENSORMAXPULSE);
 void doPWM2(){sensor2.handlePWM();}
 
 char message[MESSAGESIZE];
-float motorTargetCurrent = 0;
-float motorTargetVelocity = 0;
 float motorTargetVoltage = 0;
 float servoDC = 7.5;
 
@@ -155,7 +152,7 @@ void initMotors() {
       sensor1.enableInterrupt(doPWM1);
   motor1.linkSensor(&sensor1);
   driver1.voltage_power_supply = SUPPLYVOLTAGE;
-  driver1.voltage_limit = VOLTAGELIMITDRIVER;
+  //driver1.voltage_limit = SUPPLYVOLTAGE;
   driver1.init();
   motor1.linkDriver(&driver1);
   motor1.voltage_limit = VOLTAGELIMITMOTOR;
@@ -172,7 +169,7 @@ void initMotors() {
     sensor2.enableInterrupt(doPWM2);
   motor2.linkSensor(&sensor2);
   driver2.voltage_power_supply = SUPPLYVOLTAGE;
-  driver2.voltage_limit = VOLTAGELIMITDRIVER;
+  //driver2.voltage_limit = VOLTAGELIMITDRIVER;
   driver2.init();
   motor2.linkDriver(&driver2);
   motor2.voltage_limit = VOLTAGELIMITMOTOR;
