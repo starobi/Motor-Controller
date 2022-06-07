@@ -10,15 +10,15 @@
    Blue   - 5V  -  White
 */
 
-#define SENSORPWM1 PB6
-#define SENSORPWM2 PB7
+#define SENSORPWM1 PB7
+#define SENSORPWM2 PB15
 
 #define LEDPIN PA7
 #define SLAVEADDRESS 0x8
 #define SDAPIN PB9
 #define SCLPIN PB8
 
-#define SERVOSIGNAL PA8//PB10
+#define SERVOSIGNAL PB6//PB10
 
 #define SUPPLYVOLTAGE 8.4
 #define VOLTAGELIMITDRIVER 6  
@@ -32,8 +32,8 @@
 #define CLOSEDLOOP true
 
 #define USESERVO true
-#define USEMOTOR1 true  
-#define USEMOTOR2 true
+#define USEMOTOR1 false  
+#define USEMOTOR2 false
 
 #define MESSAGESIZE 8
 #define MAXTARGETVOLTAGE 15 // Verifz this
@@ -73,7 +73,7 @@ void doPWM2(){sensor2.handlePWM();}
 
 char message[MESSAGESIZE];
 float motorTargetVoltage = 0;
-float servoDC = 7.5;
+float servoDC = 1500;
 
 void setup() {
   blink(2, 100);
@@ -82,7 +82,7 @@ void setup() {
   initMotors();
 
   blink(3, 200);
-  //Serial1.begin(9600);
+  Serial1.begin(9600);
   
 }
 
@@ -101,7 +101,7 @@ void loop() {
   if (USEMOTOR2){
   motor2.move(motorTargetVoltage);
   }
- 
+  Serial1.println(servoDC);
 }
 void blink(int amount, int del) {
   pinMode(LEDPIN, OUTPUT);
@@ -117,7 +117,7 @@ void Update_IT_callback(void){
   
   if (USESERVO)
   {
-    MyTim->setCaptureCompare(channel,servoDC,PERCENT_COMPARE_FORMAT);
+    MyTim->setCaptureCompare(channel,servoDC,MICROSEC_COMPARE_FORMAT);
   }
   
 }
@@ -198,7 +198,7 @@ void receiveFun (int bytes)
   spd = spd - 128;
   spd = spd / 128 * MAXTARGETVOLTAGE;
   motorTargetVoltage = spd;
-  servoDC = map(str,0,255,10,5);
+  servoDC = (-3.921569)*str+2000; //The values must be between 2000 us and 1000 us
 }
 
 void requestFun()
