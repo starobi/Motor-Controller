@@ -20,9 +20,7 @@
 
 #define SERVOSIGNAL PB6//PB10
 
-#define SUPPLYVOLTAGE 8.4
-#define VOLTAGELIMITDRIVER 6  
-#define VOLTAGELIMITMOTOR 3  //Verify this
+#define SUPPLYVOLTAGE 10  //Max Current 1.8 max 2A
 #define MOTORRESISTANCE 5.57
 
 #define SENSORMINPULSE 6
@@ -32,11 +30,11 @@
 #define CLOSEDLOOP true
 
 #define USESERVO true
-#define USEMOTOR1 false  
-#define USEMOTOR2 false
+#define USEMOTOR1 true  
+#define USEMOTOR2 true
 
 #define MESSAGESIZE 8
-#define MAXTARGETVOLTAGE 15 // Verifz this
+#define MAXTARGETVOLTAGE SUPPLYVOLTAGE
 
 void requestFun(void);
 void receiveFun (int bytes);
@@ -44,23 +42,15 @@ void initMotors(void);
 void initI2C(void); 
 void blink(int amount, int del);
 
-  // no need to configure pin, it will be done by HardwareTimer configuration
-// pinMode(pin, OUTPUT);
 
-// Automatically retrieve TIM instance and channel associated to pin
-// This is used to be compatible with all STM32 series automatically.
 
 TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM);
 uint32_t channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM));
 
 
-// Instantiate HardwareTimer object. Thanks to 'new' instantiation, HardwareTimer is not destructed when setup() function is finished.
 HardwareTimer *MyTim = new HardwareTimer(Instance);
 
-
-
 BLDCMotor motor1 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);//, MOTORRESISTANCE);
-//BLDCDriver3PWM driver1 = BLDCDriver3PWM(PC0, PC1, PC2, PC13,PC13,PC13);
 BLDCDriver3PWM driver1 = BLDCDriver3PWM(PA0, PA1, PA2, PC14);
 MagneticSensorPWM sensor1 = MagneticSensorPWM(SENSORPWM1, SENSORMINPULSE, SENSORMAXPULSE);
 void doPWM1(){sensor1.handlePWM();}
@@ -81,9 +71,7 @@ void setup() {
   initI2C();
   initMotors();
 
-  blink(3, 200);
-  Serial1.begin(9600);
-  
+  blink(3, 200);  
 }
 
 void loop() {
@@ -101,7 +89,6 @@ void loop() {
   if (USEMOTOR2){
   motor2.move(motorTargetVoltage);
   }
-  Serial1.println(servoDC);
 }
 void blink(int amount, int del) {
   pinMode(LEDPIN, OUTPUT);
@@ -152,15 +139,12 @@ void initMotors() {
       sensor1.enableInterrupt(doPWM1);
   motor1.linkSensor(&sensor1);
   driver1.voltage_power_supply = SUPPLYVOLTAGE;
-  //driver1.voltage_limit = SUPPLYVOLTAGE;
   driver1.init();
   motor1.linkDriver(&driver1);
-  motor1.voltage_limit = VOLTAGELIMITMOTOR;
-  motor1.voltage_sensor_align = VOLTAGELIMITMOTOR;
   motor1.torque_controller = TorqueControlType::voltage;
   motor1.controller = MotionControlType::torque;
   motor1.init();
-  motor1.initFOC(3.2, CW);
+  motor1.initFOC(3.2, CW); //Values obtained experimentaly from Examples/Simple FOC/utils/calibration/alignment_and_cogging_test
   }
 
   
@@ -169,15 +153,12 @@ void initMotors() {
     sensor2.enableInterrupt(doPWM2);
   motor2.linkSensor(&sensor2);
   driver2.voltage_power_supply = SUPPLYVOLTAGE;
-  //driver2.voltage_limit = VOLTAGELIMITDRIVER;
   driver2.init();
   motor2.linkDriver(&driver2);
-  motor2.voltage_limit = VOLTAGELIMITMOTOR;
-  motor2.voltage_sensor_align = VOLTAGELIMITMOTOR;
   motor2.torque_controller = TorqueControlType::voltage;
   motor2.controller = MotionControlType::torque;
   motor2.init();
-  motor2.initFOC(4.8,CCW);
+  motor2.initFOC(4.8,CCW); //Values obtained experimentaly from Examples/Simple FOC/utils/calibration/alignment_and_cogging_test
  }
 
 }
