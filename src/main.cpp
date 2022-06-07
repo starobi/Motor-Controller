@@ -18,9 +18,9 @@
 #define SDAPIN PB9
 #define SCLPIN PB8
 
-#define SERVOSIGNAL PB6//PB10
+#define SERVOSIGNAL PB6
 
-#define SUPPLYVOLTAGE 10  //Max Current 1.8 max 2A
+#define SUPPLYVOLTAGE 10  
 #define MOTORRESISTANCE 5.57
 
 #define SENSORMINPULSE 6
@@ -29,12 +29,13 @@
 #define POLEPAIRS 11
 #define CLOSEDLOOP true
 
+#define MESSAGESIZE 8
+#define MAXTARGETVOLTAGE SUPPLYVOLTAGE
+
+//Options to activate and deactivate motors
 #define USESERVO true
 #define USEMOTOR1 true  
 #define USEMOTOR2 true
-
-#define MESSAGESIZE 8
-#define MAXTARGETVOLTAGE SUPPLYVOLTAGE
 
 void requestFun(void);
 void receiveFun (int bytes);
@@ -42,13 +43,13 @@ void initMotors(void);
 void initI2C(void); 
 void blink(int amount, int del);
 
-
-
+//Servomotor PWM configuration. Code taken from Examples/STM32duino Examples/Peripherals/Hardware Timer/ All-in-one-PWM and  PWM_Full_Configuration
+////////////////////////////////////////
 TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM);
 uint32_t channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM));
-
-
 HardwareTimer *MyTim = new HardwareTimer(Instance);
+////////////////////////////////////////
+
 
 BLDCMotor motor1 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);//, MOTORRESISTANCE);
 BLDCDriver3PWM driver1 = BLDCDriver3PWM(PA0, PA1, PA2, PC14);
@@ -57,7 +58,6 @@ void doPWM1(){sensor1.handlePWM();}
 
 BLDCMotor motor2 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);//, MOTORRESISTANCE);
 BLDCDriver3PWM driver2 = BLDCDriver3PWM(PC6, PC7, PC8, PC15);
-
 MagneticSensorPWM sensor2 = MagneticSensorPWM(SENSORPWM2, SENSORMINPULSE, SENSORMAXPULSE);
 void doPWM2(){sensor2.handlePWM();}
 
@@ -100,7 +100,8 @@ void blink(int amount, int del) {
     delay(del);
   }
 }
-void Update_IT_callback(void){
+//Interrupted on rising edge Servo-PWM-pin
+void Update_IT_callback(void){ 
   
   if (USESERVO)
   {
@@ -122,7 +123,7 @@ void initMotors() {
   if (USESERVO)
   {
       pinMode(PB10, OUTPUT);
-  MyTim->setPWM(channel, SERVOSIGNAL, 50, 7.5); // 5 Hertz, 10% dutycycle
+  MyTim->setPWM(channel, SERVOSIGNAL, 50, 7.5); // 50 Hertz, 7.5% dutycycle
   MyTim->attachInterrupt(Update_IT_callback);
   }
 
