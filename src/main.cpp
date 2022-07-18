@@ -17,16 +17,17 @@
 #define SUPPLYVOLTAGE 10  
 #define MOTORRESISTANCE 5.57
 
-//Encoder range of values obtained experimentallz from Examples/Simple FOC/utils/sensor_test/magnetic_sensors/magnetic_sensor_pwm/find_raw_min_max
+//Encoder range of values obtained experimentally from Examples/Simple FOC/utils/sensor_test/magnetic_sensors/magnetic_sensor_pwm/find_raw_min_max
 #define ENCODER1MINPULSE 6 
 #define ENCODER1MAXPULSE 930
 
-#define ENCODER2MINPULSE 9
+#define ENCODER2MINPULSE 9 
 #define ENCODER2MAXPULSE 898
 
 #define POLEPAIRS 11
 #define MAXTARGETVOLTAGE SUPPLYVOLTAGE
-#define WHEELRADIUS 3.15
+#define WHEELRADIUS 0.0315 //(in m)
+#define PI 3.1415926535
 
 //Motor selection
 #define USESERVO true
@@ -46,24 +47,26 @@ void receiveI2C (int bytes);
 ////////////////////////////////////////
 TIM_TypeDef *Instance = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM);
 uint32_t channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(SERVOSIGNAL), PinMap_PWM));
-HardwareTimer *PWMTimer = new HardwareTimer(Instance);
+HardwareTimer *ServoPWMTimer = new HardwareTimer(Instance);
 ////////////////////////////////////////
 
 //Motor, driver and sensor instances
 BLDCMotor motor1 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);
 BLDCDriver3PWM driver1 = BLDCDriver3PWM(PA0, PA1, PA2, PC14);
 MagneticSensorPWM sensor1 = MagneticSensorPWM(SENSORPWM1, ENCODER1MINPULSE, ENCODER1MAXPULSE);
-void doPWM1(){sensor1.handlePWM();}
+void doSensorPWM1(){sensor1.handlePWM();} //This handle function is to handle the Sensor Reading with Interruptions. It is specified in SimpleFOC documentation
 
 BLDCMotor motor2 = BLDCMotor(POLEPAIRS, MOTORRESISTANCE);
 BLDCDriver3PWM driver2 = BLDCDriver3PWM(PC6, PC7, PC8, PC15);
 MagneticSensorPWM sensor2 = MagneticSensorPWM(SENSORPWM2, ENCODER2MINPULSE, ENCODER2MAXPULSE);
-void doPWM2(){sensor2.handlePWM();}
+void doSensorPWM2(){sensor2.handlePWM();} //This handle function is to handle the Sensor Reading with Interruptions. It is specified in SimpleFOC documentation
 
 //I2C message array
 char message[MESSAGESIZE];
+
 //Target voltage is set via I2C receive and correlates to the motors RPM
 float motorTargetVoltage = 0;
+
 //Servo is moved via this PWM variable
 float servoPulseWidth = 1500;
 
@@ -109,9 +112,9 @@ void blink(int amount, int del) {
 }
 
 //Interrupted on rising edge Servo-PWM-pin
-void PWMTimerCallback(void) { 
+void ServoPWMTimerCallback(void) { 
 if (USESERVO) {
-    PWMTimer->setCaptureCompare(channel,servoPulseWidth,MICROSEC_COMPARE_FORMAT);
+    ServoPWMTimer->setCaptureCompare(channel,servoPulseWidth,MICROSEC_COMPARE_FORMAT);
   }
 }
 
@@ -129,8 +132,8 @@ void initMotors() {
   //servo init
   if (USESERVO) {
     pinMode(PB10, OUTPUT);
-    PWMTimer->setPWM(channel, SERVOSIGNAL, 50, 7.5); // 50 Hertz, 7.5% dutycycle or Pulse Width of 1.5 ms
-    PWMTimer->attachInterrupt(PWMTimerCallback);
+    ServoPWMTimer->setPWM(channel, SERVOSIGNAL, 50, 7.5); // 50 Hertz, 7.5% dutycycle or Pulse Width of 1.5 ms
+    ServoPWMTimer->attachInterrupt(ServoPWMTimerCallback);
   }
 
   pinMode(SENSORPWM1, INPUT);
@@ -142,7 +145,7 @@ void initMotors() {
 
   if (USEMOTOR1){
     sensor1.init();
-    sensor1.enableInterrupt(doPWM1);
+    sensor1.enableInterrupt(doSensorPWM1);
     motor1.linkSensor(&sensor1);
     driver1.voltage_power_supply = SUPPLYVOLTAGE;
     driver1.init();
@@ -155,7 +158,7 @@ void initMotors() {
   
  if (USEMOTOR2) {
     sensor2.init();
-    sensor2.enableInterrupt(doPWM2);
+    sensor2.enableInterrupt(doSensorPWM2);
     motor2.linkSensor(&sensor2);
     driver2.voltage_power_supply = SUPPLYVOLTAGE;
     driver2.init();
