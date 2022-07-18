@@ -19,7 +19,7 @@
 
 //Encoder range of values obtained experimentally from Examples/Simple FOC/utils/sensor_test/magnetic_sensors/magnetic_sensor_pwm/find_raw_min_max
 #define ENCODER1MINPULSE 6 
-#define ENCODER1MAXPULSE 930
+#define ENCODER1MAXPULSE 940
 
 #define ENCODER2MINPULSE 9 
 #define ENCODER2MAXPULSE 898
@@ -33,7 +33,6 @@
 #define USESERVO true
 #define USEMOTOR1 true  
 #define USEMOTOR2 true
-#define CLOSEDLOOP true
 #define MESSAGESIZE 8
 
 void initMotors(void);
@@ -150,6 +149,7 @@ void initMotors() {
     driver1.voltage_power_supply = SUPPLYVOLTAGE;
     driver1.init();
     motor1.linkDriver(&driver1);
+    motor1.voltage_sensor_align = 3;
     motor1.torque_controller = TorqueControlType::voltage;
     motor1.controller = MotionControlType::torque;
     motor1.init();
@@ -163,6 +163,7 @@ void initMotors() {
     driver2.voltage_power_supply = SUPPLYVOLTAGE;
     driver2.init();
     motor2.linkDriver(&driver2);
+    motor2.voltage_sensor_align = 3;
     motor2.torque_controller = TorqueControlType::voltage;
     motor2.controller = MotionControlType::torque;
     motor2.init();
